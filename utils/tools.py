@@ -143,7 +143,7 @@ class EMBER_Dataset_norm(Dataset):
             return x
 
 
-def test(model, test_loader, poison_test = False, poison_transform=None, num_classes=10, source_classes=None, all_to_all = False):
+def test(model, test_loader, poison_test = False, poison_transform=None, num_classes=3, source_classes=None, all_to_all = False):
 
     model.eval()
     clean_correct = 0
@@ -159,6 +159,8 @@ def test(model, test_loader, poison_test = False, poison_transform=None, num_cla
 
     with torch.no_grad():
         for data, target in test_loader:
+            if torch.any(target < 0) or torch.any(target >= num_classes):
+                print("Target tensor contains invalid class indices")
 
             data, target = data.cuda(), target.cuda()
             clean_output = model(data)
@@ -168,6 +170,7 @@ def test(model, test_loader, poison_test = False, poison_transform=None, num_cla
             tot += len(target)
             this_batch_size = len(target)
             tot_loss += criterion(clean_output, target) * this_batch_size
+            # tot_loss += criterion(clean_output, target)
 
 
             for bid in range(this_batch_size):

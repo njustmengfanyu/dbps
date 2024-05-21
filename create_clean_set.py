@@ -48,8 +48,29 @@ elif args.dataset == 'cifar10':
     ])
     clean_set = datasets.CIFAR10(os.path.join(data_dir, 'cifar10'), train=False,
                                   download=True, transform=data_transform)
+    print("clean set:", len(clean_set))
+    
+    def filter_func(target):
+        return target < 3  # 只选择标签为0或1的样本
+
+    # 使用筛选函数过滤数据集
+    filtered_dataset = torch.utils.data.Subset(clean_set, [i for i, (_, target) in enumerate(clean_set) if filter_func(target)])
+
+    # 步骤1: 检查标签分布
+    label_counts = {0: 0, 1: 0, 2: 0}
+    for _, target in filtered_dataset:
+        label_counts[target] += 1
+    print("Label counts:", label_counts)
+
+    # 步骤2: 样本数量验证
+    total_samples = len(filtered_dataset)
+    expected_samples = 3 * len(clean_set) // 10  # 每个类别1000张，共2个类别
+    print("total_samples:", total_samples)
+    assert total_samples == expected_samples, f"Expected {expected_samples} samples, but got {total_samples}"
+
+
     img_size = 32
-    num_classes = 10
+    num_classes = 3
 
 elif args.dataset == 'imagenet':
     pass
@@ -126,14 +147,14 @@ if not os.path.exists(test_split_img_dir):
 if args.dataset != 'ember' and args.dataset != 'imagenet':
 
     # randomly sample from a clean test set to simulate the clean samples at hand
-    num_img = len(clean_set)
+    num_img = len(filtered_dataset)
     id_set = list(range(0,num_img))
     random.shuffle(id_set)
     clean_split_indices = id_set[:args.clean_budget]
     test_indices = id_set[args.clean_budget:]
 
     # Construct Shift Set for Defensive Purpose
-    clean_split_set = torch.utils.data.Subset(clean_set, clean_split_indices)
+    clean_split_set = torch.utils.data.Subset(filtered_dataset, clean_split_indices)
     num = len(clean_split_set)
 
     clean_label_set = []
@@ -143,16 +164,16 @@ if args.dataset != 'ember' and args.dataset != 'imagenet':
         img_file_name = '%d.png' % i
         img_file_path = os.path.join(clean_split_img_dir, img_file_name)
         save_image(img, img_file_path)
-        print('[Generate Clean Split] Save %s' % img_file_path)
+        # print('[Generate Clean Split] Save %s' % img_file_path)
         clean_label_set.append(gt)
 
     clean_label_set = torch.LongTensor(clean_label_set)
     clean_label_path = os.path.join(clean_split_dir, 'clean_labels')
     torch.save(clean_label_set, clean_label_path)
-    print('[Generate Clean Split Set] Save %s' % clean_label_path)
+    # print('[Generate Clean Split Set] Save %s' % clean_label_path)
 
     # Take the rest clean samples as the test set for debug & evaluation
-    test_set = torch.utils.data.Subset(clean_set, test_indices)
+    test_set = torch.utils.data.Subset(filtered_dataset, test_indices)
     num = len(test_set)
     label_set = []
 
@@ -161,13 +182,13 @@ if args.dataset != 'ember' and args.dataset != 'imagenet':
         img_file_name = '%d.png' % i
         img_file_path = os.path.join(test_split_img_dir, img_file_name)
         save_image(img, img_file_path)
-        print('[Generate Test Set] Save %s' % img_file_path)
+        # print('[Generate Test Set] Save %s' % img_file_path)
         label_set.append(gt)
 
     label_set = torch.LongTensor(label_set)
     label_path = os.path.join(test_split_dir, 'labels')
     torch.save(label_set, label_path)
-    print('[Generate Test Set] Save %s' % label_path)
+    # print('[Generate Test Set] Save %s' % label_path)
 
 elif args.dataset == 'imagenet':
 

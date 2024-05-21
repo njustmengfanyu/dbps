@@ -57,7 +57,7 @@ else:
 if args.trigger is None:
     args.trigger = config.trigger_default[args.poison_type]
 
-batch_size = 128
+batch_size = 100
 kwargs = {'num_workers': 4, 'pin_memory': True}
 
 
@@ -130,7 +130,7 @@ class spectral_visualizer:
 
 if args.dataset == 'cifar10':
 
-    num_classes = 10
+    num_classes = 3
     if args.no_normalize:
         data_transform = transforms.Compose([
                 transforms.ToTensor(),

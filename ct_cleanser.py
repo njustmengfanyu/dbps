@@ -20,7 +20,7 @@ parser.add_argument('-alpha', type=float,  required=False, default=default_args.
 parser.add_argument('-test_alpha', type=float,  required=False, default=None)
 parser.add_argument('-trigger', type=str,  required=False,
                     default=None)
-parser.add_argument('-devices', type=str, default='0')
+parser.add_argument('-devices', type=str, default='0,1,2,3,4,5,6,7')
 parser.add_argument('-debug_info', default=False, action='store_true')
 parser.add_argument('-log', default=False, action='store_true')
 parser.add_argument('-seed', type=int, required=False, default=default_args.seed)
@@ -57,7 +57,7 @@ if args.log:
 
 params = config.get_params(args)
 inspection_set, clean_set = config.get_dataset(params['inspection_set_dir'], params['data_transform'],
-                                               args, num_classes=params['num_classes'])
+                                               args, num_classes=3)
 
 #inspection_set_aug, clean_set_aug = config.get_dataset(params['inspection_set_dir'], params['data_transform_aug'],
 #                                               args, num_classes=params['num_classes'])
@@ -75,7 +75,7 @@ def iterative_poison_distillation(inspection_set, clean_set, params, args, debug
 
     kwargs = params['kwargs']
     inspection_set_dir = params['inspection_set_dir']
-    num_classes = params['num_classes']
+    num_classes = 3
     pretrain_epochs = params['pretrain_epochs']
     weight_decay = params['weight_decay']
     arch = params['arch']
@@ -184,7 +184,7 @@ def iterative_poison_distillation(inspection_set, clean_set, params, args, debug
 
         # distill the inspected set according to the loss values
         distilled_samples_indices, median_sample_indices = confusion_training.distill(args, params, inspection_set,
-                                                                                      confusion_iter, criterion_no_reduction)
+                                                                                      confusion_iter, criterion_no_reduction, num_classes=3)
 
         distilled_set = torch.utils.data.Subset(inspection_set, distilled_samples_indices)
         #distilled_set_aug = torch.utils.data.Subset(inspection_set_aug, distilled_samples_indices)
@@ -211,7 +211,7 @@ distilled_samples_indices, median_sample_indices = confusion_training.distill(ar
 print('to identify poison samples')
 # detect backdoor poison samples with the confused model
 suspicious_indices = confusion_training.identify_poison_samples_simplified(inspection_set, median_sample_indices,
-                                                                model, num_classes=params['num_classes'])
+                                                                model, num_classes=3)
 
 
 # save indicies

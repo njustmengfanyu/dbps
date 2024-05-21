@@ -285,7 +285,48 @@ class ResNet_super_narrow(nn.Module):
         else:
             return out
 
+class ResNet4Cifar(nn.Module):
+    def __init__(self, block, num_block, num_classes=3):
+        super().__init__()
+        self.in_channels = 16
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(16),
+            nn.ReLU(inplace=True))
+        # we use a different inputsize than the original paper
+        # so conv2_x's stride is 1
+        self.conv2_x = self._make_layer(block, 16, num_block[0], 1)
+        self.conv3_x = self._make_layer(block, 32, num_block[1], 2)
+        self.conv4_x = self._make_layer(block, 64, num_block[2], 2)
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(64 * block.expansion, num_classes)
 
+    def _make_layer(self, block, out_channels, num_blocks, stride):
+        strides = [stride] + [1] * (num_blocks - 1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_channels, out_channels, stride))
+            self.in_channels = out_channels * block.expansion
+        return nn.Sequential(*layers)
+
+    def forward(self, x, return_hidden=False):
+        output = self.conv1(x)
+        output = self.conv2_x(output)
+        output = self.conv3_x(output)
+        output = self.conv4_x(output)
+        output = self.avg_pool(output)
+        hidden = output.view(output.size(0), -1)
+        output = self.fc(hidden)
+
+        if return_hidden:
+            return output, hidden
+        else:
+            return output
+
+def ResNet20(num_classes=3, **kargs):
+    """ return a ResNet 20 object
+    """
+    return ResNet4Cifar(BasicBlock, [3, 3, 3], num_classes=num_classes)
 
 def ResNet18(num_classes=10):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes = num_classes)

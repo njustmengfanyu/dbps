@@ -54,7 +54,7 @@ if args.poison_type == 'dynamic':
         train_set = datasets.CIFAR10(os.path.join(data_dir, 'cifar10'), train=True,
                                      download=True, transform=data_transform)
         img_size = 32
-        num_classes = 10
+        num_classes = 2
         channel_init = 32
         steps = 3
         input_channel = 3
@@ -145,11 +145,29 @@ else:
         ])
         train_set = datasets.CIFAR10(os.path.join(data_dir, 'cifar10'), train=True,
                                      download=True, transform=data_transform)
+        def filter_func(target):
+            return target < 3  # 只选择标签为0或1的样本
+
+        # 使用筛选函数过滤数据集
+        filtered_dataset = torch.utils.data.Subset(train_set, [i for i, (_, target) in enumerate(train_set) if filter_func(target)])
+        print(len(filtered_dataset))
+        # 步骤1: 检查标签分布
+        label_counts = {0: 0, 1: 0, 2: 0}
+        for _, target in filtered_dataset:
+            label_counts[target] += 1
+        print("Label counts:", label_counts)
+
+        # 步骤2: 样本数量验证
+        total_samples = len(filtered_dataset)
+        expected_samples = 3 * len(train_set) // 10  # 每个类别1000张，共2个类别
+        print("total_samples:", total_samples)
+        assert total_samples == expected_samples, f"Expected {expected_samples} samples, but got {total_samples}"
         img_size = 32
-        num_classes = 10
+
+        num_classes = 3
 
     else:
-        raise  NotImplementedError('Undefined Dataset')
+        raise NotImplementedError('Undefined Dataset')
 
 trigger_transform = transforms.Compose([
     transforms.ToTensor()
@@ -264,7 +282,7 @@ if args.poison_type in ['badnet', 'blend', 'clean_label',
     elif args.poison_type == 'adaptive_blend':
 
         from poison_tool_box import adaptive_blend
-        poison_generator = adaptive_blend.poison_generator(img_size=img_size, dataset=train_set,
+        poison_generator = adaptive_blend.poison_generator(img_size=img_size, dataset=filtered_dataset,
                                                           poison_rate=args.poison_rate,
                                                           path=poison_set_img_dir, trigger=trigger,
                                                           pieces=16, mask_rate=0.5,
@@ -317,7 +335,7 @@ if args.poison_type in ['badnet', 'blend', 'clean_label',
     
     else: # 'none'
         from poison_tool_box import none
-        poison_generator = none.poison_generator(img_size=img_size, dataset=train_set,
+        poison_generator = none.poison_generator(img_size=img_size, dataset=filtered_dataset,
                                                 path=poison_set_img_dir)
 
 

@@ -450,7 +450,7 @@ def confusion_train(args, params, inspection_set, debug_packet, distilled_set_lo
 
 
 # restore from a certain iteration step
-def distill(args, params, inspection_set, n_iter, criterion_no_reduction,
+def distill(args, params, inspection_set, n_iter, criterion_no_reduction, num_classes,
             dataset_name = None, final_budget = None, class_wise = False, custom_arch=None):
     '''
                    distill samples from the dataset based on loss values of the inference model
@@ -472,7 +472,7 @@ def distill(args, params, inspection_set, n_iter, criterion_no_reduction,
 
     kwargs = params['kwargs']
     inspection_set_dir = params['inspection_set_dir']
-    num_classes = params['num_classes']
+    # num_classes = params['num_classes']
     num_samples = len(inspection_set)
     arch = params['arch']
     distillation_ratio = params['distillation_ratio']

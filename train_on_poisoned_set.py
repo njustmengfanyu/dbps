@@ -7,6 +7,8 @@ from tqdm import tqdm
 from utils import default_args, imagenet
 from torch.cuda.amp import autocast, GradScaler
 
+os.environ['TORCH_USE_CUDA_DSA'] = "1"
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-dataset', type=str, required=False,
                     default=default_args.parser_default['dataset'],
@@ -110,14 +112,14 @@ else:
 
 if args.dataset == 'cifar10':
 
-    num_classes = 10
+    num_classes = 3
     arch = config.arch[args.dataset]
     momentum = 0.9
     weight_decay = 1e-4
     epochs = 100
     milestones = torch.tensor([50, 75])
     learning_rate = 0.1
-    batch_size = 128
+    batch_size = 100
 
 elif args.dataset == 'gtsrb':
 
@@ -178,7 +180,8 @@ if args.dataset != 'ember' and args.dataset != 'imagenet':
     print('dataset : %s' % poisoned_set_img_dir)
 
     poisoned_set = tools.IMG_Dataset(data_dir=poisoned_set_img_dir,
-                                     label_path=poisoned_set_label_path, transforms=data_transform if args.no_aug else data_transform_aug)
+                                     label_path=poisoned_set_label_path, transforms=data_transform if args.no_aug else data_transform_aug,
+                                     num_classes=3)
 
     poisoned_set_loader = torch.utils.data.DataLoader(
         poisoned_set,
@@ -227,10 +230,25 @@ if args.dataset != 'ember' and args.dataset != 'imagenet':
     test_set_img_dir = os.path.join(test_set_dir, 'data')
     test_set_label_path = os.path.join(test_set_dir, 'labels')
     test_set = tools.IMG_Dataset(data_dir=test_set_img_dir,
-                                 label_path=test_set_label_path, transforms=data_transform)
+                                 label_path=test_set_label_path, transforms=data_transform, num_classes=3)
     test_set_loader = torch.utils.data.DataLoader(
         test_set,
         batch_size=batch_size, shuffle=False, worker_init_fn=tools.worker_init, **kwargs)
+
+    # # 创建一个列表来存储所有标签
+    # all_labels = []
+
+    # # 遍历test_set中的所有项来收集标签
+    # for i in range(len(test_set)):
+    #     # 获取单个数据项，data_item可能是一个元组或列表，包含数据和标签
+    #     data_item = test_set[i]
+    #     # 假设标签是data_item的第二个元素
+    #     label = data_item[1]
+    #     # 将标签添加到列表中
+    #     all_labels.append(label)
+
+    # # 打印所有标签
+    # print('all labels:', all_labels)
 
     # Poison Transform for Testing
     poison_transform = supervisor.get_poison_transform(poison_type=args.poison_type, dataset_name=args.dataset,
@@ -287,6 +305,7 @@ else:
 # Train Code
 if args.dataset != 'ember':
     model = arch(num_classes=num_classes)
+    # model = arch()
 else:
     model = arch()
 
@@ -340,6 +359,9 @@ for epoch in range(1, epochs+1):  # train backdoored base model
 
         #with autocast():
         output = model(data)
+        # print('output.shape:', output.shape)
+        # print('target.shape:', target.shape)
+
         loss = criterion(output, target)
 
         #scaler.scale(loss).backward()
@@ -365,6 +387,7 @@ for epoch in range(1, epochs+1):  # train backdoored base model
                                     test_backdoor_loader=test_set_backdoor_loader)
                 torch.save(model.module.state_dict(), supervisor.get_model_dir(args))
             else:
+                print('num_classes:', num_classes)
                 tools.test(model=model, test_loader=test_set_loader, poison_test=True,
                            poison_transform=poison_transform, num_classes=num_classes, source_classes=source_classes, all_to_all=all_to_all)
                 torch.save(model.module.state_dict(), supervisor.get_model_dir(args))

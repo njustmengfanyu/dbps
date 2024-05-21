@@ -41,7 +41,8 @@ trigger_default = {
 
 arch = {
     ### for base model & poison distillation
-    'cifar10': resnet.ResNet18,
+    'cifar10': resnet.ResNet20,
+    # 'cifar10': resnet.ResNet18,
     'gtsrb' : resnet.ResNet18,
     'ember': ember_nn.EmberNN,
     'imagenet' : resnet.ResNet18,
@@ -108,7 +109,7 @@ def get_params(args):
 
     if args.dataset == 'cifar10':
 
-        num_classes = 10
+        num_classes = 3
 
         data_transform_normalize = transforms.Compose([
             transforms.ToTensor(),
@@ -164,7 +165,7 @@ def get_params(args):
         'batch_factors': batch_factors,
         'weight_decay' : 1e-4,
         'num_classes' : num_classes,
-        'batch_size' : 32,
+        'batch_size' : 100,
         'pretrain_epochs' : 100,
         'median_sample_rate': 0.1,
         'base_arch' :  arch[args.dataset],
@@ -177,7 +178,7 @@ def get_params(args):
     return params
 
 
-def get_dataset(inspection_set_dir, data_transform, args, num_classes = 10):
+def get_dataset(inspection_set_dir, data_transform, args, num_classes = 3):
 
     print('|num_classes = %d|' % num_classes)
 
@@ -213,7 +214,7 @@ def get_packet_for_debug(poison_set_dir, data_transform, batch_size, args):
     kwargs = {'num_workers': 2, 'pin_memory': True}
     test_set_loader = torch.utils.data.DataLoader(
         test_set,
-        batch_size=256, shuffle=True, worker_init_fn=tools.worker_init, **kwargs)
+        batch_size=100, shuffle=True, worker_init_fn=tools.worker_init, **kwargs)
 
     trigger_transform = data_transform
     poison_transform = supervisor.get_poison_transform(poison_type=args.poison_type, dataset_name=args.dataset,

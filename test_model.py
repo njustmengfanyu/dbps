@@ -44,7 +44,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "%s" % args.devices
 if args.trigger is None:
     args.trigger = config.trigger_default[args.poison_type]
 
-batch_size = 128
+batch_size = 100
 kwargs = {'num_workers': 4, 'pin_memory': True}
 
 tools.setup_seed(args.seed)
@@ -82,7 +82,7 @@ else:
     raise NotImplementedError('dataset %s not supported' % args.dataset)
 
 if args.dataset == 'cifar10':
-    num_classes = 10
+    num_classes = 3
     arch = config.arch[args.dataset]
     momentum = 0.9
     weight_decay = 1e-4
