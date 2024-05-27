@@ -120,7 +120,7 @@ if args.dataset == 'cifar10':
     epochs = 100
     milestones = torch.tensor([50, 75])
     learning_rate = 0.1
-    batch_size = 100
+    batch_size = 20
 
 elif args.dataset == 'gtsrb':
 

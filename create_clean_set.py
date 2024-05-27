@@ -54,8 +54,25 @@ elif args.dataset == 'cifar10':
     def filter_func(target):
         return target < args.num_classes  # 只选择标签为前num_classes-1的样本
 
+    # 获取目标类别的索引
+    filtered_indices = [i for i, (_, target) in enumerate(clean_set) if filter_func(target)]
+
+    # 分离飞机和汽车的索引
+    plane_indices = [i for i in filtered_indices if clean_set.targets[i] == 0]
+    car_indices = [i for i in filtered_indices if clean_set.targets[i] == 1]
+
+    # 随机选择每个类别的100张图片
+    selected_plane_indices = np.random.choice(plane_indices, 100, replace=False)
+    selected_car_indices = np.random.choice(car_indices, 100, replace=False)
+
+    # 合并飞机和汽车的索引
+    selected_indices = np.concatenate((selected_plane_indices, selected_car_indices))
+
+    # 使用 Subset 创建新的数据集
+    filtered_dataset = torch.utils.data.Subset(clean_set, selected_indices)
+
     # 使用筛选函数过滤数据集
-    filtered_dataset = torch.utils.data.Subset(clean_set, [i for i, (_, target) in enumerate(clean_set) if filter_func(target)])
+    # filtered_dataset = torch.utils.data.Subset(clean_set, [i for i, (_, target) in enumerate(clean_set) if filter_func(target)])
 
     # 步骤1: 检查标签分布
 
@@ -68,10 +85,10 @@ elif args.dataset == 'cifar10':
     print("Label counts:", label_counts)
 
     # 步骤2: 样本数量验证
-    total_samples = len(filtered_dataset)
-    expected_samples = args.num_classes * len(clean_set) // 10  # 每个类别1000张，共2个类别
-    print("total_samples:", total_samples)
-    assert total_samples == expected_samples, f"Expected {expected_samples} samples, but got {total_samples}"
+    # total_samples = len(filtered_dataset)
+    # expected_samples = args.num_classes * len(clean_set) // 10  # 每个类别1000张，共2个类别
+    # print("total_samples:", total_samples)
+    # assert total_samples == expected_samples, f"Expected {expected_samples} samples, but got {total_samples}"
 
 
     img_size = 32
