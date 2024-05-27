@@ -286,7 +286,7 @@ class ResNet_super_narrow(nn.Module):
             return out
 
 class ResNet4Cifar(nn.Module):
-    def __init__(self, block, num_block, num_classes=3):
+    def __init__(self, block, num_block, num_classes=2):
         super().__init__()
         self.in_channels = 16
         self.conv1 = nn.Sequential(
@@ -323,7 +323,7 @@ class ResNet4Cifar(nn.Module):
         else:
             return output
 
-def ResNet20(num_classes=3, **kargs):
+def ResNet20(num_classes=2, **kargs):
     """ return a ResNet 20 object
     """
     return ResNet4Cifar(BasicBlock, [3, 3, 3], num_classes=num_classes)

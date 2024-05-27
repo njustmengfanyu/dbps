@@ -35,6 +35,7 @@ parser.add_argument('-no_normalize', default=False, action='store_true')
 parser.add_argument('-devices', type=str, default='0')
 parser.add_argument('-log', default=False, action='store_true')
 parser.add_argument('-seed', type=int, required=False, default=default_args.seed)
+parser.add_argument('-num_classes', type=int, required=True, help='please input num_classes')
 
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = "%s" % args.devices
@@ -112,7 +113,7 @@ else:
 
 if args.dataset == 'cifar10':
 
-    num_classes = 3
+    num_classes = args.num_classes
     arch = config.arch[args.dataset]
     momentum = 0.9
     weight_decay = 1e-4
@@ -181,7 +182,7 @@ if args.dataset != 'ember' and args.dataset != 'imagenet':
 
     poisoned_set = tools.IMG_Dataset(data_dir=poisoned_set_img_dir,
                                      label_path=poisoned_set_label_path, transforms=data_transform if args.no_aug else data_transform_aug,
-                                     num_classes=3)
+                                     num_classes=num_classes)
 
     poisoned_set_loader = torch.utils.data.DataLoader(
         poisoned_set,
@@ -230,7 +231,7 @@ if args.dataset != 'ember' and args.dataset != 'imagenet':
     test_set_img_dir = os.path.join(test_set_dir, 'data')
     test_set_label_path = os.path.join(test_set_dir, 'labels')
     test_set = tools.IMG_Dataset(data_dir=test_set_img_dir,
-                                 label_path=test_set_label_path, transforms=data_transform, num_classes=3)
+                                 label_path=test_set_label_path, transforms=data_transform, num_classes=num_classes)
     test_set_loader = torch.utils.data.DataLoader(
         test_set,
         batch_size=batch_size, shuffle=False, worker_init_fn=tools.worker_init, **kwargs)

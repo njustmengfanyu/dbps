@@ -143,7 +143,7 @@ class EMBER_Dataset_norm(Dataset):
             return x
 
 
-def test(model, test_loader, poison_test = False, poison_transform=None, num_classes=3, source_classes=None, all_to_all = False):
+def test(model, test_loader, poison_test = False, poison_transform=None, num_classes=10, source_classes=None, all_to_all = False):
 
     model.eval()
     clean_correct = 0

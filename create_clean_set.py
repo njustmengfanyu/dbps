@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-dataset', type=str, required=False, default=default_args.parser_default['dataset'],
                     choices=default_args.parser_choices['dataset'])
 parser.add_argument('-clean_budget', type=int, default=2000)
+parser.add_argument('-num_classes', type=int, required=True, help='please input num_classes')
 # by defaut :  we assume 2000 clean samples for defensive purpose
 
 args = parser.parse_args()
@@ -51,26 +52,30 @@ elif args.dataset == 'cifar10':
     print("clean set:", len(clean_set))
     
     def filter_func(target):
-        return target < 3  # 只选择标签为0或1的样本
+        return target < args.num_classes  # 只选择标签为前num_classes-1的样本
 
     # 使用筛选函数过滤数据集
     filtered_dataset = torch.utils.data.Subset(clean_set, [i for i, (_, target) in enumerate(clean_set) if filter_func(target)])
 
     # 步骤1: 检查标签分布
-    label_counts = {0: 0, 1: 0, 2: 0}
+
+    # 使用for循环创建字典
+    label_counts = {i: 0 for i in range(args.num_classes)}
+    print(label_counts)
+
     for _, target in filtered_dataset:
         label_counts[target] += 1
     print("Label counts:", label_counts)
 
     # 步骤2: 样本数量验证
     total_samples = len(filtered_dataset)
-    expected_samples = 3 * len(clean_set) // 10  # 每个类别1000张，共2个类别
+    expected_samples = args.num_classes * len(clean_set) // 10  # 每个类别1000张，共2个类别
     print("total_samples:", total_samples)
     assert total_samples == expected_samples, f"Expected {expected_samples} samples, but got {total_samples}"
 
 
     img_size = 32
-    num_classes = 3
+    num_classes = args.num_classes
 
 elif args.dataset == 'imagenet':
     pass

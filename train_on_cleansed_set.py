@@ -38,6 +38,7 @@ parser.add_argument('-devices', type=str, default='0')
 parser.add_argument('-cleanser', type=str, choices=['SCAn','AC','SS', 'CT', 'SPECTRE', 'Strip', 'SentiNet'], default='CT')
 parser.add_argument('-log', default=False, action='store_true')
 parser.add_argument('-seed', type=int, required=False, default=default_args.seed)
+parser.add_argument('-num_classes', type=int, required=True, help='please input num_classes')
 
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = "%s" % args.devices
@@ -72,13 +73,13 @@ if args.log:
     sys.stdout = fout
     sys.stderr = ferr
 
-batch_size = 128
+batch_size = 100
 
 
 
 if args.dataset == 'cifar10':
 
-    num_classes = 10
+    num_classes = args.num_classes
 
     data_transform_aug = transforms.Compose([
                                     transforms.RandomHorizontalFlip(),
@@ -214,6 +215,7 @@ else:
 poisoned_indices = torch.load(os.path.join(poison_set_dir, 'poison_indices'))
 cleansed_set_indices.sort()
 poisoned_indices.sort()
+print(poisoned_indices)
 
 tot_poison = len(poisoned_indices)
 num_poison = 0
@@ -314,6 +316,7 @@ else:
 
 
 #milestones = milestones.tolist()
+print("numclasses:", num_classes)
 model = arch(num_classes=num_classes)
 model = nn.DataParallel(model)
 model = model.cuda()

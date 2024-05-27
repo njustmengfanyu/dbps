@@ -38,6 +38,7 @@ parser.add_argument('-no_normalize', default=False, action='store_true')
 parser.add_argument('-no_aug', default=False, action='store_true')
 parser.add_argument('-devices', type=str, default='0')
 parser.add_argument('-seed', type=int, required=False, default=default_args.seed)
+parser.add_argument('-num_classes', type=int, required=True, help='please input num_classes')
 args = parser.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "%s" % args.devices
@@ -82,7 +83,7 @@ else:
     raise NotImplementedError('dataset %s not supported' % args.dataset)
 
 if args.dataset == 'cifar10':
-    num_classes = 3
+    num_classes = args.num_classes
     arch = config.arch[args.dataset]
     momentum = 0.9
     weight_decay = 1e-4

@@ -109,7 +109,7 @@ def get_params(args):
 
     if args.dataset == 'cifar10':
 
-        num_classes = 3
+        num_classes = args.num_classes
 
         data_transform_normalize = transforms.Compose([
             transforms.ToTensor(),
@@ -178,7 +178,7 @@ def get_params(args):
     return params
 
 
-def get_dataset(inspection_set_dir, data_transform, args, num_classes = 3):
+def get_dataset(inspection_set_dir, data_transform, args, num_classes = 10):
 
     print('|num_classes = %d|' % num_classes)
 

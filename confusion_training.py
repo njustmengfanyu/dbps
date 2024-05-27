@@ -78,6 +78,7 @@ def identify_poison_samples_simplified(inspection_set, clean_indices, model, num
 
     kwargs = {'num_workers': 4, 'pin_memory': True}
     num_samples = len(inspection_set)
+    print('identify_poison_samples_simplified', num_classes)
 
     # main dataset we aim to cleanse
     inspection_split_loader = torch.utils.data.DataLoader(
@@ -482,6 +483,7 @@ def distill(args, params, inspection_set, n_iter, criterion_no_reduction, num_cl
         arch = custom_arch
 
     model = arch(num_classes=num_classes)
+    print(inspection_set_dir)
     ckpt = torch.load(os.path.join(inspection_set_dir, 'confused_%d_seed=%d.pt' % (n_iter, args.seed)))
     model.load_state_dict(ckpt)
     model = nn.DataParallel(model)
